@@ -4,14 +4,30 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <a href="{{ route('products.index') }}" class="btn btn-primary mt-1 mb-3">商品一覧画面に戻る</a>
                 <div class="card">
-                    <div class="card-header"><h2>商品情報を変更する</h2></div>
-
                     <div class="card-body">
-                        <form method="POST" action="{{ route('products.update', $product) }}" enctype="multipart/form-data">
+                        <!-- 成功メッセージの表示 -->
+                        @if(session('success'))
+                            <div class="alert alert-success">
+                                {{ session('success') }}
+                            </div>
+                        @endif
+
+                        <!-- エラーメッセージの表示 -->
+                        @if(session('error'))
+                            <div class="alert alert-danger">
+                                {{ session('error') }}
+                            </div>
+                        @endif
+
+                        <form id="updateForm" method="POST" action="{{ route('products.update', $product) }}" enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
+
+                            <div class="mb-3">
+                                <label for="id" class="form-label">ID</label>
+                                <input type="text" class="form-control" id="id" name="id" value="{{ $product->id }}" readonly>
+                            </div>
 
                             <div class="mb-3">
                                 <label for="product_name" class="form-label">商品名</label>
@@ -19,7 +35,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="company_id" class="form-label">会社</label>
+                                <label for="company_id" class="form-label">メーカー名</label>
                                 <select class="form-select" id="company_id" name="company_id">
                                     @foreach($companies as $company)
                                         <option value="{{ $company->id }}" {{ $product->company_id == $company->id ? 'selected' : '' }}>{{ $company->company_name }}</option>
@@ -48,12 +64,30 @@
                                 <img src="{{ asset($product->img_path) }}" alt="商品画像" class="product-image">
                             </div>
 
-                            <button type="submit" class="btn btn-primary">変更内容で更新する</button>
+                            <div style="display: flex; gap: 20px;">
+                                <button type="submit" class="btn btn-primary" style="background-color: orange; border-color: orange; width: 150px; height: 45px;">更新</button>
+                                <a href="{{ route('products.index') }}" class="btn btn-primary" style="width: 150px; height: 45px;">戻る</a>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-@endsection
 
+    <!-- JavaScript for error handling -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const updateForm = document.getElementById('updateForm');
+            
+            updateForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                try {
+                    updateForm.submit();
+                } catch (error) {
+                    alert('更新に失敗しました。再度お試しください。');
+                }
+            });
+        });
+    </script>
+@endsection

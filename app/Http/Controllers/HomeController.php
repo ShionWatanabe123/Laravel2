@@ -23,8 +23,6 @@ class HomeController extends Controller
      */
     public function index(Request $request)
     {
-        // ここに必要な処理を追加します
         return view('home');
     }
 }
-

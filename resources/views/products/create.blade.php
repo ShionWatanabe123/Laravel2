@@ -4,13 +4,8 @@
 <div class="container">
     <h1 class="mb-4">商品新規登録</h1>
 
-    <a href="{{ route('products.index') }}" class="btn btn-primary mb-3">商品一覧に戻る</a>
-
-    <form method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data">
-
+    <form id="createForm" method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data">
         @csrf
-
-
 
         <div class="mb-3">
             <label for="product_name" class="form-label">商品名:</label>
@@ -46,10 +41,26 @@
             <input id="img_path" type="file" name="img_path" class="form-control" required>
         </div>
 
-        <button type="submit" class="btn btn-primary">登録</button>
+        <div style="display: flex; gap: 100px;">
+            <button type="submit" class="btn btn-primary" style="background-color: orange; border-color: orange;">新規登録</button>
+            <a href="{{ route('products.index') }}" class="btn btn-primary">戻る</a>
+        </div>
     </form>
-
-
 </div>
-@endsection
 
+<!-- JavaScript for error handling -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const createForm = document.getElementById('createForm');
+        
+        createForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            try {
+                createForm.submit();
+            } catch (error) {
+                alert('新規登録に失敗しました。再度お試しください。');
+            }
+        });
+    });
+</script>
+@endsection
