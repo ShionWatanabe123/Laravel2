@@ -4,6 +4,18 @@
 <div class="container">
     <h1 class="mb-4">商品新規登録</h1>
 
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <form id="createForm" method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data">
         @csrf
 
@@ -47,20 +59,4 @@
         </div>
     </form>
 </div>
-
-<!-- JavaScript for error handling -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const createForm = document.getElementById('createForm');
-        
-        createForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            try {
-                createForm.submit();
-            } catch (error) {
-                alert('新規登録に失敗しました。再度お試しください。');
-            }
-        });
-    });
-</script>
 @endsection

@@ -1,19 +1,20 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Company;
 use Illuminate\Http\Request;
+use Exception;
+use App\Http\Requests\ArticleRequest;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        // 検索用のクエリパラメータ
         $search = $request->input('search');
         $company_id = $request->input('company_id');
 
-        // クエリビルダーを使用して条件を設定
         $query = Product::query();
 
         if ($search) {
@@ -24,105 +25,83 @@ class ProductController extends Controller
             $query->where('company_id', $company_id);
         }
 
-        // クエリを実行して結果を取得
         $products = $query->with('company')->get();
-
-        // メーカーリストを取得
         $companies = Company::all();
 
-        // ビューにデータを渡す
         return view('products.index', compact('products', 'companies'));
     }
 
     public function create()
     {
-        // 商品作成画面で会社の情報が必要なので、全ての会社の情報を取得します。
         $companies = Company::all();
-
-        // 商品作成画面を表示します。その際に、先ほど取得した全ての会社情報を画面に渡します。
         return view('products.create', compact('companies'));
     }
 
-    // 送られたデータをデータベースに保存するメソッドです
-    public function store(Request $request)
+    public function store(ArticleRequest $request)
     {
-        // リクエストされた情報を確認して、必要な情報が全て揃っているかチェックします。
-        $request->validate([
-            'product_name' => 'required',
-            'company_id' => 'required',
-            'price' => 'required',
-            'stock' => 'required',
-            'comment' => 'nullable',
-            'img_path' => 'nullable|image|max:2048',
-        ]);
+        try {
+            $product = new Product([
+                'product_name' => $request->get('product_name'),
+                'company_id' => $request->get('company_id'),
+                'price' => $request->get('price'),
+                'stock' => $request->get('stock'),
+                'comment' => $request->get('comment'),
+            ]);
 
-        // 新しく商品を作ります。そのための情報はリクエストから取得します。
-        $product = new Product([
-            'product_name' => $request->get('product_name'),
-            'company_id' => $request->get('company_id'),
-            'price' => $request->get('price'),
-            'stock' => $request->get('stock'),
-            'comment' => $request->get('comment'),
-        ]);
+            if ($request->hasFile('img_path')) {
+                $filename = $request->img_path->getClientOriginalName();
+                $filePath = $request->img_path->storeAs('products', $filename, 'public');
+                $product->img_path = '/storage/' . $filePath;
+            }
 
-        // リクエストに画像が含まれている場合、その画像を保存します。
-        if ($request->hasFile('img_path')) {
-            $filename = $request->img_path->getClientOriginalName();
-            $filePath = $request->img_path->storeAs('products', $filename, 'public');
-            $product->img_path = '/storage/' . $filePath;
+            $product->save();
+
+            return redirect()->route('products.index')->with('success', '商品が正常に登録されました。');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', '商品登録中にエラーが発生しました。' . $e->getMessage());
         }
-
-        // 作成したデータベースに新しいレコードとして保存します。
-        $product->save();
-
-        // 全ての処理が終わったら、商品一覧画面に戻ります。
-        return redirect('products');
     }
 
     public function show(Product $product)
     {
-        // 商品詳細画面を表示します。その際に、商品の詳細情報を画面に渡します。
         return view('products.show', ['product' => $product]);
     }
 
     public function edit(Product $product)
     {
-        // 商品編集画面で会社の情報が必要なので、全ての会社の情報を取得します。
         $companies = Company::all();
-
-        // 商品編集画面を表示します。その際に、商品の情報と会社の情報を画面に渡します。
         return view('products.edit', compact('product', 'companies'));
     }
 
-    public function update(Request $request, Product $product)
+    public function update(ArticleRequest $request, Product $product)
     {
-        // リクエストされた情報を確認して、必要な情報が全て揃っているかチェックします。
-        $request->validate([
-            'product_name' => 'required',
-            'price' => 'required',
-            'stock' => 'required',
-        ]);
+        try {
+            $product->product_name = $request->product_name;
+            $product->price = $request->price;
+            $product->stock = $request->stock;
+            $product->comment = $request->comment;
 
-        // 商品の情報を更新します。
-        $product->product_name = $request->product_name;
-        $product->price = $request->price;
-        $product->stock = $request->stock;
+            if ($request->hasFile('img_path')) {
+                $filename = $request->img_path->getClientOriginalName();
+                $filePath = $request->img_path->storeAs('products', $filename, 'public');
+                $product->img_path = '/storage/' . $filePath;
+            }
 
-        // 更新した商品を保存します。
-        $product->save();
+            $product->save();
 
-        // 全ての処理が終わったら、商品一覧画面に戻ります。
-        return redirect()->route('products.index')
-            ->with('success', 'Product updated successfully');
+            return redirect()->route('products.index')->with('success', '商品が正常に更新されました。');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', '商品更新中にエラーが発生しました。' . $e->getMessage());
+        }
     }
 
     public function destroy(Product $product)
     {
-        // 商品を削除します。
-        $product->delete();
-
-        // 全ての処理が終わったら、商品一覧画面に戻ります。
-        return redirect('/products');
+        try {
+            $product->delete();
+            return redirect()->route('products.index')->with('success', '商品が正常に削除されました。');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', '商品削除中にエラーが発生しました。' . $e->getMessage());
+        }
     }
 }
-?>
