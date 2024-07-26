@@ -4,19 +4,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Auth;
 
-
 Route::get('/', function () {
     if (Auth::check()) {
-        
         return redirect()->route('products.index');
     } else {
-        
         return redirect()->route('login');
     }
 });
 
 Auth::routes();
-
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
@@ -26,4 +22,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+    
+    // Search route within the auth middleware group
+    Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
 });

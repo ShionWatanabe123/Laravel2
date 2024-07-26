@@ -6,8 +6,8 @@
 
     <!-- 検索フォームのセクション -->
     <div class="search mt-5">
-        <!-- 検索フォーム。GETメソッドで、商品一覧のルートにデータを送信 -->
-        <form action="{{ route('products.index') }}" method="GET" class="row g-3">
+        <!-- 検索フォーム -->
+        <form id="searchForm" class="row g-3">
             <!-- 商品名検索用の入力欄 -->
             <div class="col-sm-12 col-md-3">
                 <input type="text" name="search" class="form-control" placeholder="商品キーワード" value="{{ request('search') }}">
@@ -23,6 +23,26 @@
                 </select>
             </div>
 
+            <!-- 最小価格検索用の入力欄 -->
+            <div class="col-sm-12 col-md-2">
+                <input type="number" name="min_price" class="form-control" placeholder="最小価格" value="{{ request('min_price') }}">
+            </div>
+
+            <!-- 最大価格検索用の入力欄 -->
+            <div class="col-sm-12 col-md-2">
+                <input type="number" name="max_price" class="form-control" placeholder="最大価格" value="{{ request('max_price') }}">
+            </div>
+
+            <!-- 最小在庫数検索用の入力欄 -->
+            <div class="col-sm-12 col-md-2">
+                <input type="number" name="min_stock" class="form-control" placeholder="最小在庫数" value="{{ request('min_stock') }}">
+            </div>
+
+            <!-- 最大在庫数検索用の入力欄 -->
+            <div class="col-sm-12 col-md-2">
+                <input type="number" name="max_stock" class="form-control" placeholder="最大在庫数" value="{{ request('max_stock') }}">
+            </div>
+
             <!-- 絞り込みボタン -->
             <div class="col-sm-12 col-md-1">
                 <button class="btn btn-outline-secondary" type="submit">検索</button>
@@ -31,7 +51,7 @@
     </div>
 
     <div class="products mt-5">
-        <table class="table table-striped">
+        <table class="table table-striped" id="productsTable">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -45,7 +65,7 @@
             </thead>
             <tbody>
                 @foreach ($products as $product)
-                    <tr>
+                    <tr data-id="{{ $product->id }}">
                         <td>{{ $product->id }}</td>
                         <td><img src="{{ asset($product->img_path) }}" alt="商品画像" width="100"></td>
                         <td>{{ $product->product_name }}</td>
@@ -54,36 +74,90 @@
                         <td>{{ $product->company->company_name }}</td>
                         <td>
                             <a href="{{ route('products.show', $product) }}" class="btn btn-info btn-sm mx-1">詳細表示</a>
-                            <form method="POST" action="{{ route('products.destroy', $product) }}" class="d-inline delete-form">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm mx-1">削除</button>
-                            </form>
+                            <button class="btn btn-danger btn-sm mx-1 delete-button" data-id="{{ $product->id }}">削除</button>
                         </td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
     </div>
+
+    <!-- ページネーションのリンク -->
+    <div class="mt-4">
+        {{ $products->appends(request()->query())->links() }}
+    </div>
 </div>
 
-<!-- JavaScript for error handling -->
+<!-- JavaScript for non-async search handling -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const deleteForms = document.querySelectorAll('.delete-form');
+    const searchForm = document.getElementById('searchForm');
+    const productsTableBody = document.querySelector('#productsTable tbody');
 
-    deleteForms.forEach(form => {
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
-            const confirmation = confirm('本当に削除しますか？');
-            if (confirmation) {
-                try {
-                    form.submit();
-                } catch (error) {
+    // 検索フォームの非同期処理
+    searchForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const formData = new FormData(searchForm);
+        const params = new URLSearchParams(formData).toString();
+
+        fetch(`{{ route('products.search') }}?${params}`)
+            .then(response => response.json())
+            .then(data => {
+                productsTableBody.innerHTML = '';
+                data.products.forEach(product => {
+                    const row = document.createElement('tr');
+                    row.setAttribute('data-id', product.id);
+
+                    row.innerHTML = `
+                        <td>${product.id}</td>
+                        <td><img src="/storage/${product.img_path}" alt="商品画像" width="100"></td>
+                        <td>${product.product_name}</td>
+                        <td>${product.price}</td>
+                        <td>${product.stock}</td>
+                        <td>${product.company.company_name}</td>
+                        <td>
+                            <a href="/products/${product.id}" class="btn btn-info btn-sm mx-1">詳細表示</a>
+                            <button class="btn btn-danger btn-sm mx-1 delete-button" data-id="${product.id}">削除</button>
+                        </td>
+                    `;
+
+                    productsTableBody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('検索に失敗しました。再度お試しください。');
+            });
+    });
+
+    // 削除ボタンの非同期処理
+    productsTableBody.addEventListener('click', function(event) {
+        if (event.target.classList.contains('delete-button')) {
+            const button = event.target;
+            const productId = button.getAttribute('data-id');
+            const row = button.closest('tr');
+
+            if (confirm('本当に削除しますか？')) {
+                fetch(`/products/${productId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        row.remove();
+                    } else {
+                        throw new Error('削除処理に失敗しました。');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                     alert('削除に失敗しました。再度お試しください。');
-                }
+                });
             }
-        });
+        }
     });
 });
 </script>

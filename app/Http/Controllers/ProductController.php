@@ -12,23 +12,80 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->input('search');
-        $company_id = $request->input('company_id');
-
+        $companies = Company::all();
         $query = Product::query();
 
-        if ($search) {
-            $query->where('product_name', 'like', "%{$search}%");
+        if ($search = $request->search) {
+            $query->where('product_name', 'LIKE', "%{$search}%");
         }
 
-        if ($company_id) {
+        if ($company_id = $request->company_id) {
             $query->where('company_id', $company_id);
         }
 
-        $products = $query->with('company')->get();
-        $companies = Company::all();
+        if ($min_price = $request->min_price) {
+            $query->where('price', '>=', $min_price);
+        }
 
-        return view('products.index', compact('products', 'companies'));
+        if ($max_price = $request->max_price) {
+            $query->where('price', '<=', $max_price);
+        }
+
+        if ($min_stock = $request->min_stock) {
+            $query->where('stock', '>=', $min_stock);
+        }
+
+        if ($max_stock = $request->max_stock) {
+            $query->where('stock', '<=', $max_stock);
+        }
+
+        // ソート機能の追加
+        $sort = $request->sort ?? 'id';
+        $direction = $request->direction ?? 'desc';
+
+        $query->orderBy($sort, $direction);
+
+        $products = $query->paginate(10);
+
+        return view('products.index', [
+            'products' => $products,
+            'companies' => $companies,
+            'sort' => $sort,
+            'direction' => $direction,
+        ]);
+    }
+
+    public function search(Request $request)
+    {
+        $query = Product::query();
+
+        if ($search = $request->search) {
+            $query->where('product_name', 'LIKE', "%{$search}%");
+        }
+
+        if ($company_id = $request->company_id) {
+            $query->where('company_id', $company_id);
+        }
+
+        if ($min_price = $request->min_price) {
+            $query->where('price', '>=', $min_price);
+        }
+
+        if ($max_price = $request->max_price) {
+            $query->where('price', '<=', $max_price);
+        }
+
+        if ($min_stock = $request->min_stock) {
+            $query->where('stock', '>=', $min_stock);
+        }
+
+        if ($max_stock = $request->max_stock) {
+            $query->where('stock', '<=', $max_stock);
+        }
+
+        $products = $query->with('company')->get();
+
+        return response()->json(['products' => $products]);
     }
 
     public function create()
@@ -99,9 +156,9 @@ class ProductController extends Controller
     {
         try {
             $product->delete();
-            return redirect()->route('products.index')->with('success', '商品が正常に削除されました。');
+            return response()->json(['success' => '商品が正常に削除されました。']);
         } catch (Exception $e) {
-            return redirect()->back()->with('error', '商品削除中にエラーが発生しました。' . $e->getMessage());
+            return response()->json(['error' => '商品削除中にエラーが発生しました。' . $e->getMessage()], 500);
         }
     }
 }
