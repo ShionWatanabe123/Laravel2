@@ -54,11 +54,27 @@
         <table class="table table-striped" id="productsTable">
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort' => 'id', 'direction' => request('direction') === 'asc' ? 'desc' : 'asc'])) }}">
+                            ID @if(request('sort') === 'id') {{ request('direction') === 'asc' ? '▲' : '▼' }} @endif
+                        </a>
+                    </th>
                     <th>商品画像</th>
-                    <th>商品名</th>
-                    <th>価格</th>
-                    <th>在庫数</th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort' => 'product_name', 'direction' => request('direction') === 'asc' ? 'desc' : 'asc'])) }}">
+                            商品名 @if(request('sort') === 'product_name') {{ request('direction') === 'asc' ? '▲' : '▼' }} @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort' => 'price', 'direction' => request('direction') === 'asc' ? 'desc' : 'asc'])) }}">
+                            価格 @if(request('sort') === 'price') {{ request('direction') === 'asc' ? '▲' : '▼' }} @endif
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ route('products.index', array_merge(request()->query(), ['sort' => 'stock', 'direction' => request('direction') === 'asc' ? 'desc' : 'asc'])) }}">
+                            在庫数 @if(request('sort') === 'stock') {{ request('direction') === 'asc' ? '▲' : '▼' }} @endif
+                        </a>
+                    </th>
                     <th>メーカー名</th>
                     <th><a href="{{ route('products.create') }}" class="btn btn-primary mb-3">商品新規登録</a></th>
                 </tr>
