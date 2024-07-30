@@ -7,7 +7,7 @@
     <!-- 検索フォームのセクション -->
     <div class="search mt-5">
         <!-- 検索フォーム -->
-        <form id="searchForm" class="row g-3">
+        <form id="searchForm" class="row g-3" method="GET" action="{{ route('products.index') }}">
             <!-- 商品名検索用の入力欄 -->
             <div class="col-sm-12 col-md-3">
                 <input type="text" name="search" class="form-control" placeholder="商品キーワード" value="{{ request('search') }}">

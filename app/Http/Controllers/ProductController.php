@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Product;
@@ -45,7 +44,7 @@ class ProductController extends Controller
 
         $query->orderBy($sort, $direction);
 
-        $products = $query->paginate(10);
+        $products = $query->paginate(10)->appends($request->query());
 
         return view('products.index', [
             'products' => $products,
