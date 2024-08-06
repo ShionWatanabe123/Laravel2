@@ -10,7 +10,7 @@
         <form id="searchForm" class="row g-3" method="GET" action="{{ route('products.index') }}">
             <!-- 商品名検索用の入力欄 -->
             <div class="col-sm-12 col-md-3">
-                <input type="text" name="search" class="form-control" placeholder="商品キーワード" value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control" placeholder="商品キーワード" value="{{ request('search', session('search')) }}">
             </div>
 
             <!-- メーカー名検索用のセレクトボックス -->
@@ -18,29 +18,29 @@
                 <select name="company_id" class="form-select">
                     <option value="">メーカーを選択</option>
                     @foreach ($companies as $company)
-                        <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>{{ $company->company_name }}</option>
+                        <option value="{{ $company->id }}" {{ request('company_id', session('company_id')) == $company->id ? 'selected' : '' }}>{{ $company->company_name }}</option>
                     @endforeach
                 </select>
             </div>
 
             <!-- 最小価格検索用の入力欄 -->
             <div class="col-sm-12 col-md-2">
-                <input type="number" name="min_price" class="form-control" placeholder="最小価格" value="{{ request('min_price') }}">
+                <input type="number" name="min_price" class="form-control" placeholder="最小価格" value="{{ request('min_price', session('min_price')) }}">
             </div>
 
             <!-- 最大価格検索用の入力欄 -->
             <div class="col-sm-12 col-md-2">
-                <input type="number" name="max_price" class="form-control" placeholder="最大価格" value="{{ request('max_price') }}">
+                <input type="number" name="max_price" class="form-control" placeholder="最大価格" value="{{ request('max_price', session('max_price')) }}">
             </div>
 
             <!-- 最小在庫数検索用の入力欄 -->
             <div class="col-sm-12 col-md-2">
-                <input type="number" name="min_stock" class="form-control" placeholder="最小在庫数" value="{{ request('min_stock') }}">
+                <input type="number" name="min_stock" class="form-control" placeholder="最小在庫数" value="{{ request('min_stock', session('min_stock')) }}">
             </div>
 
             <!-- 最大在庫数検索用の入力欄 -->
             <div class="col-sm-12 col-md-2">
-                <input type="number" name="max_stock" class="form-control" placeholder="最大在庫数" value="{{ request('max_stock') }}">
+                <input type="number" name="max_stock" class="form-control" placeholder="最大在庫数" value="{{ request('max_stock', session('max_stock')) }}">
             </div>
 
             <!-- 絞り込みボタン -->

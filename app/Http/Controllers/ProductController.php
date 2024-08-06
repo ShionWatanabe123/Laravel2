@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Product;
@@ -12,29 +13,38 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $companies = Company::all();
+
+        // 検索条件を取得またはセッションから復元
+        $search = $request->search ?? session('search');
+        $company_id = $request->company_id ?? session('company_id');
+        $min_price = $request->min_price ?? session('min_price');
+        $max_price = $request->max_price ?? session('max_price');
+        $min_stock = $request->min_stock ?? session('min_stock');
+        $max_stock = $request->max_stock ?? session('max_stock');
+
         $query = Product::query();
 
-        if ($search = $request->search) {
+        if ($search) {
             $query->where('product_name', 'LIKE', "%{$search}%");
         }
 
-        if ($company_id = $request->company_id) {
+        if ($company_id) {
             $query->where('company_id', $company_id);
         }
 
-        if ($min_price = $request->min_price) {
+        if ($min_price) {
             $query->where('price', '>=', $min_price);
         }
 
-        if ($max_price = $request->max_price) {
+        if ($max_price) {
             $query->where('price', '<=', $max_price);
         }
 
-        if ($min_stock = $request->min_stock) {
+        if ($min_stock) {
             $query->where('stock', '>=', $min_stock);
         }
 
-        if ($max_stock = $request->max_stock) {
+        if ($max_stock) {
             $query->where('stock', '<=', $max_stock);
         }
 
@@ -45,6 +55,16 @@ class ProductController extends Controller
         $query->orderBy($sort, $direction);
 
         $products = $query->paginate(10)->appends($request->query());
+
+        // 検索条件をセッションに保存
+        session([
+            'search' => $search,
+            'company_id' => $company_id,
+            'min_price' => $min_price,
+            'max_price' => $max_price,
+            'min_stock' => $min_stock,
+            'max_stock' => $max_stock
+        ]);
 
         return view('products.index', [
             'products' => $products,
