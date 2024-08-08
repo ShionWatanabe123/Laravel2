@@ -15,12 +15,12 @@ class ProductController extends Controller
         $companies = Company::all();
 
         // 検索条件を取得またはセッションから復元
-        $search = $request->search ?? session('search');
-        $company_id = $request->company_id ?? session('company_id');
-        $min_price = $request->min_price ?? session('min_price');
-        $max_price = $request->max_price ?? session('max_price');
-        $min_stock = $request->min_stock ?? session('min_stock');
-        $max_stock = $request->max_stock ?? session('max_stock');
+        $search = $request->input('search', session('search'));
+        $company_id = $request->input('company_id', session('company_id'));
+        $min_price = $request->input('min_price', session('min_price'));
+        $max_price = $request->input('max_price', session('max_price'));
+        $min_stock = $request->input('min_stock', session('min_stock'));
+        $max_stock = $request->input('max_stock', session('max_stock'));
 
         $query = Product::query();
 
@@ -49,8 +49,8 @@ class ProductController extends Controller
         }
 
         // ソート機能の追加
-        $sort = $request->sort ?? 'id';
-        $direction = $request->direction ?? 'desc';
+        $sort = $request->input('sort', 'id');
+        $direction = $request->input('direction', 'desc');
 
         $query->orderBy($sort, $direction);
 
@@ -63,7 +63,7 @@ class ProductController extends Controller
             'min_price' => $min_price,
             'max_price' => $max_price,
             'min_stock' => $min_stock,
-            'max_stock' => $max_stock
+            'max_stock' => $max_stock,
         ]);
 
         return view('products.index', [
@@ -78,31 +78,48 @@ class ProductController extends Controller
     {
         $query = Product::query();
 
-        if ($search = $request->search) {
+        $search = $request->input('search', session('search'));
+        $company_id = $request->input('company_id', session('company_id'));
+        $min_price = $request->input('min_price', session('min_price'));
+        $max_price = $request->input('max_price', session('max_price'));
+        $min_stock = $request->input('min_stock', session('min_stock'));
+        $max_stock = $request->input('max_stock', session('max_stock'));
+
+        if ($search) {
             $query->where('product_name', 'LIKE', "%{$search}%");
         }
 
-        if ($company_id = $request->company_id) {
+        if ($company_id) {
             $query->where('company_id', $company_id);
         }
 
-        if ($min_price = $request->min_price) {
+        if ($min_price) {
             $query->where('price', '>=', $min_price);
         }
 
-        if ($max_price = $request->max_price) {
+        if ($max_price) {
             $query->where('price', '<=', $max_price);
         }
 
-        if ($min_stock = $request->min_stock) {
+        if ($min_stock) {
             $query->where('stock', '>=', $min_stock);
         }
 
-        if ($max_stock = $request->max_stock) {
+        if ($max_stock) {
             $query->where('stock', '<=', $max_stock);
         }
 
         $products = $query->with('company')->get();
+
+        // 検索条件をセッションに保存
+        session([
+            'search' => $search,
+            'company_id' => $company_id,
+            'min_price' => $min_price,
+            'max_price' => $max_price,
+            'min_stock' => $min_stock,
+            'max_stock' => $max_stock,
+        ]);
 
         return response()->json(['products' => $products]);
     }
